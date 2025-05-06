@@ -53,7 +53,7 @@ export default function HomePage() {
         book.author.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
     
-    const matchesCategory = selectedCategory
+    const matchesCategory = selectedCategory && selectedCategory !== "all"
       ? book.category === selectedCategory
       : true;
     
@@ -61,7 +61,7 @@ export default function HomePage() {
   });
 
   // Get unique categories from the books
-  const categories = [...new Set(books.map((book) => book.category))].sort();
+  const categories = Array.from(new Set(books.map((book) => book.category))).sort();
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -28,8 +28,8 @@ export default function BrowseBooksPage() {
     error,
     refetch,
   } = useQuery<Book[]>({
-    queryKey: [selectedCategory ? `/api/books?category=${selectedCategory}` : "/api/books"],
-    queryFn: () => selectedCategory ? fetchBooksByCategory(selectedCategory) : fetchBooks(),
+    queryKey: [selectedCategory && selectedCategory !== "all" ? `/api/books?category=${selectedCategory}` : "/api/books"],
+    queryFn: () => selectedCategory && selectedCategory !== "all" ? fetchBooksByCategory(selectedCategory) : fetchBooks(),
   });
 
   // Filter books based on search term
@@ -41,7 +41,7 @@ export default function BrowseBooksPage() {
   );
 
   // Get unique categories from the books
-  const categories = [...new Set(books.map((book) => book.category))].sort();
+  const categories = Array.from(new Set(books.map((book) => book.category))).sort();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -82,7 +82,7 @@ export default function BrowseBooksPage() {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}

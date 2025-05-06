@@ -96,7 +96,7 @@ export default function BookListingsPage() {
         book.author.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
 
-    const matchesCategory = categoryFilter
+    const matchesCategory = categoryFilter && categoryFilter !== "all"
       ? book.category === categoryFilter
       : true;
 
@@ -104,7 +104,7 @@ export default function BookListingsPage() {
   });
 
   // Get unique categories
-  const categories = [...new Set(books.map((book) => book.category))].sort();
+  const categories = Array.from(new Set(books.map((book) => book.category))).sort();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -153,7 +153,7 @@ export default function BookListingsPage() {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
