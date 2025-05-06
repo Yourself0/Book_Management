@@ -12,6 +12,7 @@ import EditBookPage from "@/pages/seller/edit-book";
 import BrowseBooksPage from "@/pages/buyer/browse";
 import BookDetailsPage from "@/pages/book-details";
 import PurchasesPage from "@/pages/buyer/purchases";
+import FavoritesPage from "@/pages/buyer/favorites";
 import ProfilePage from "@/pages/profile";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
       {/* Protected buyer routes */}
       <ProtectedRoute path="/buyer/browse" component={BrowseBooksPage} />
       <ProtectedRoute path="/buyer/purchases" component={PurchasesPage} />
+      <ProtectedRoute path="/buyer/favorites" component={FavoritesPage} />
       
       {/* Common protected routes */}
       <ProtectedRoute path="/profile" component={ProfilePage} />
