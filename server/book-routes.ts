@@ -228,19 +228,130 @@ export function setupBookRoutes(app: express.Express) {
         return res.status(404).json({ message: 'Book not found' });
       }
       
-      // Create the transaction
+      // Create the transaction with 'pending' status
       const transaction = await storage.createTransaction({
         bookId: book.id,
         buyerId: req.user.id,
         sellerId: book.sellerId,
         price: book.price,
-        status: 'completed'
+        status: 'pending'
       });
       
       res.status(201).json(transaction);
     } catch (error) {
       console.error('Error creating transaction:', error);
       res.status(500).json({ message: 'Failed to process purchase' });
+    }
+  });
+  
+  // Update transaction status (accept order)
+  app.put('/api/transactions/:id/accept', isAuthenticated, isSeller, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id, 10);
+      
+      // Get the transaction to check ownership
+      const transaction = await storage.getTransactionById(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: 'Transaction not found' });
+      }
+      
+      // Check if the authenticated user is the seller for this transaction
+      if (transaction.sellerId !== req.user.id) {
+        return res.status(403).json({ message: 'You can only update your own transactions' });
+      }
+      
+      // Check if the transaction is in pending state
+      if (transaction.status !== 'pending') {
+        return res.status(400).json({ message: `Transaction is already ${transaction.status}` });
+      }
+      
+      // Update the transaction status to accepted
+      const updatedTransaction = await storage.updateTransaction(transactionId, {
+        status: 'accepted'
+      });
+      
+      res.json(updatedTransaction);
+    } catch (error) {
+      console.error('Error accepting transaction:', error);
+      res.status(500).json({ message: 'Failed to accept order' });
+    }
+  });
+  
+  // Update transaction with shipping info
+  app.put('/api/transactions/:id/ship', isAuthenticated, isSeller, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id, 10);
+      const { trackingNumber, trackingUrl } = req.body;
+      
+      if (!trackingNumber) {
+        return res.status(400).json({ message: 'Tracking number is required' });
+      }
+      
+      // Get the transaction to check ownership
+      const transaction = await storage.getTransactionById(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: 'Transaction not found' });
+      }
+      
+      // Check if the authenticated user is the seller for this transaction
+      if (transaction.sellerId !== req.user.id) {
+        return res.status(403).json({ message: 'You can only update your own transactions' });
+      }
+      
+      // Check if the transaction is in accepted state
+      if (transaction.status !== 'accepted') {
+        return res.status(400).json({ message: `Transaction must be in 'accepted' state to ship` });
+      }
+      
+      // Update the transaction with shipping info
+      const updatedTransaction = await storage.updateTransaction(transactionId, {
+        status: 'shipped',
+        trackingNumber,
+        trackingUrl,
+        shippedAt: new Date()
+      });
+      
+      res.json(updatedTransaction);
+    } catch (error) {
+      console.error('Error shipping transaction:', error);
+      res.status(500).json({ message: 'Failed to update shipping information' });
+    }
+  });
+  
+  // Mark transaction as delivered (can be done by buyer or seller)
+  app.put('/api/transactions/:id/deliver', isAuthenticated, async (req, res) => {
+    try {
+      const transactionId = parseInt(req.params.id, 10);
+      
+      // Get the transaction
+      const transaction = await storage.getTransactionById(transactionId);
+      
+      if (!transaction) {
+        return res.status(404).json({ message: 'Transaction not found' });
+      }
+      
+      // Check if the authenticated user is either the buyer or seller for this transaction
+      if (transaction.sellerId !== req.user.id && transaction.buyerId !== req.user.id) {
+        return res.status(403).json({ message: 'You are not authorized to update this transaction' });
+      }
+      
+      // Check if the transaction is in shipped state
+      if (transaction.status !== 'shipped') {
+        return res.status(400).json({ message: `Transaction must be in 'shipped' state to mark as delivered` });
+      }
+      
+      // Update the transaction status to delivered
+      const updatedTransaction = await storage.updateTransaction(transactionId, {
+        status: 'delivered',
+        deliveredAt: new Date()
+      });
+      
+      res.json(updatedTransaction);
+    } catch (error) {
+      console.error('Error marking transaction as delivered:', error);
+      res.status(500).json({ message: 'Failed to mark as delivered' });
     }
   });
 

@@ -24,7 +24,9 @@ export interface IStorage {
   // Transaction methods
   getTransactionsBySeller(sellerId: number): Promise<Transaction[]>;
   getTransactionsByBuyer(buyerId: number): Promise<Transaction[]>;
+  getTransactionById(id: number): Promise<Transaction | undefined>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction | undefined>;
   
   // Session store
   sessionStore: session.SessionStore;

@@ -38,8 +38,13 @@ export const transactions = pgTable("transactions", {
   buyerId: integer("buyer_id").notNull(),
   sellerId: integer("seller_id").notNull(),
   price: doublePrecision("price").notNull(),
-  status: text("status").notNull().default("completed"), // 'pending', 'completed', 'canceled'
+  status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'shipped', 'delivered', 'canceled'
+  trackingNumber: text("tracking_number"),
+  trackingUrl: text("tracking_url"),
+  shippedAt: timestamp("shipped_at"),
+  deliveredAt: timestamp("delivered_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Establish relationships
@@ -95,6 +100,9 @@ export const insertBookSchema = createInsertSchema(books).omit({
 export const insertTransactionSchema = createInsertSchema(transactions).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+  shippedAt: true,
+  deliveredAt: true,
 });
 
 // Types for database operations
