@@ -5,7 +5,6 @@ import { createServer as createViteServer, createLogger } from "vite";
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
-import { createServer, InlineConfig } from 'vite';
 
 const viteLogger = createLogger();
 
@@ -21,11 +20,12 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  const serverOptions: InlineConfig["server"] = {
+  const serverOptions = {
     middlewareMode: true,
     hmr: { server },
     allowedHosts: true,
   };
+
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
@@ -36,11 +36,7 @@ export async function setupVite(app: Express, server: Server) {
         process.exit(1);
       },
     },
-    server: {
-      middlewareMode: true,
-      hmr: { server },
-      allowedHosts: ['localhost','.vercel.app'],
-    },
+    server: serverOptions,
     appType: "custom",
   });
 
@@ -50,7 +46,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        path.dirname(new URL(import.meta.url).pathname),
+        import.meta.dirname,
         "..",
         "client",
         "index.html",
