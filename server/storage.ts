@@ -137,6 +137,26 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return transaction;
   }
+
+  async getTransactionById(id: number): Promise<Transaction | undefined> {
+    const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
+    return transaction;
+  }
+
+  async updateTransaction(id: number, transactionData: Partial<InsertTransaction>): Promise<Transaction | undefined> {
+    const updatedData = {
+      ...transactionData,
+      updatedAt: new Date(),
+    };
+    
+    const [transaction] = await db
+      .update(transactions)
+      .set(updatedData)
+      .where(eq(transactions.id, id))
+      .returning();
+    
+    return transaction;
+  }
 }
 
 export const storage = new DatabaseStorage();
