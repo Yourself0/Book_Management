@@ -8,10 +8,12 @@ import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
+import { Request, Response, NextFunction } from "express";
+import { VerifyFunction } from "passport-local";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -57,7 +59,7 @@ export function setupAuth(app: Express) {
         const user = await storage.getUserByUsername(username);
         if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: "Invalid username or password" });
-        } 
+        }
         return done(null, user);
       } catch (err) {
         return done(err);
@@ -79,7 +81,7 @@ export function setupAuth(app: Express) {
     try {
       // Validate the request body against our schema
       const validatedData = insertUserSchema.parse(req.body);
-      
+
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(validatedData.username);
       if (existingUser) {
@@ -103,25 +105,26 @@ export function setupAuth(app: Express) {
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: err.errors 
+        return res.status(400).json({
+          message: "Validation error",
+          errors: err.errors
         });
       }
       next(err);
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+
+  app.post("/api/login", (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", (err: any, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: info?.message || "Authentication failed" });
       }
-      
+
       req.login(user, (err) => {
         if (err) return next(err);
-        
+
         // Remove the password from the user object before sending it back
         const { password, ...userWithoutPassword } = user;
         res.status(200).json(userWithoutPassword);
@@ -138,7 +141,7 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     // Remove the password from the user object before sending it back
     const { password, ...userWithoutPassword } = req.user;
     res.json(userWithoutPassword);
