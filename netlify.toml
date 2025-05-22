@@ -1,0 +1,22 @@
+# netlify.toml
+
+[build]
+command = "npm run build" # This tells Netlify to run your 'npm run build' script
+publish = "dist/public"   # This tells Netlify where your built frontend static files are located
+functions = "netlify/functions" # This tells Netlify where to look for your serverless functions
+
+# --- API Gateway configuration for Netlify Functions ---
+# This redirect rule will route all requests starting with /api/
+# to your compiled Node.js function located at netlify/functions/index.js
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/index/:splat" # Netlify's convention for functions: /.netlify/functions/<function-name>
+status = 200 # Use 200 for an internal rewrite (hidden from user)
+
+# --- Frontend SPA (Single Page Application) Fallback ---
+# This rule ensures that if a path is not found (e.g., a direct link to /about),
+# it will serve your index.html so your client-side router can handle it.
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
